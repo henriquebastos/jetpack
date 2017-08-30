@@ -1,0 +1,1 @@
+00 * * * * %(current)s/bin/python %(current)s/manage.py ping_google /sitemap.xml

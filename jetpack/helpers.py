@@ -1,0 +1,79 @@
+# coding: utf-8
+from datetime import datetime
+from fabric.api import settings, require
+from fabric.tasks import Task
+from cuisine import MODE_SUDO
+
+
+class Project(dict):
+    """
+    Describes the remote directory structure for a project.
+    """
+    def __init__(self, project, instance, user=None, basedir=None, package=None):
+        user = user or '%(project)s_%(instance)s' % locals()
+        basedir = basedir or '/home/%(user)s' % locals()
+        package = package or project
+
+        appname = '%(project)s_%(instance)s' % locals()
+        appdir = '%(basedir)s/%(appname)s' % locals()
+
+        self.dirs = dict(
+            appdir   = appdir,
+            releases = '%s/releases' % appdir,
+            current  = '%s/releases/current' % appdir,
+            share    = '%s/share' % appdir,
+            media    = '%s/share/media' % appdir,
+            tmp      = '%s/tmp' % appdir,
+        )
+
+        super(Project, self).__init__(
+            user=user,
+            instance=instance,
+            project=project,
+            appname=appname,
+            package=package,
+            settings='%s/share/settings.ini' % appdir,
+            checkpoint='%s/share/checkpoint' % appdir,
+            **self.dirs)
+
+    def __getattr__(self, item):
+        if item in self:
+            return self[item]
+
+        raise AttributeError("'%s' object has no attribute '%s'" % (
+            self.__name__, item))
+
+
+def timestamp():
+    return datetime.now().strftime("%Y-%m-%d-%Hh%Mm%Ss")
+
+
+def ask(question, options):
+    if isinstance(options, tuple):
+        answers = dict(zip(options, options))
+    else:
+        answers = options
+
+    selection = None
+
+    while selection not in answers:
+        selection = raw_input(question)
+
+    return answers.get(selection)
+
+
+class RunAsAdmin(Task):
+    def __init__(self, func, user, *args, **kwargs):
+        super(RunAsAdmin, self).__init__(*args, **kwargs)
+        self.__doc__ = func.__doc__
+        self.func = func
+        self.user = user
+        self.mode = False if self.user == 'root' else True
+
+    def run(self, *args, **kwargs):
+        require('PROJECT')
+        with settings(user=self.user, **{MODE_SUDO: self.mode}):
+            return self.func(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        return self.run(*args, **kwargs)

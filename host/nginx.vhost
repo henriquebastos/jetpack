@@ -1,0 +1,83 @@
+server {
+    server_name www.eventex.com.br;
+    rewrite ^(.*) https://eventex.com.br$1 permanent;
+}
+
+server {
+  listen 80;
+  server_name eventex.com.br *.eventex.com.br;
+  rewrite ^(.*) https://$host$1 permanent;
+}
+
+server {
+    listen 443 ssl;
+    server_name stage.eventex.com.br;
+    charset utf-8;
+
+    ssl_certificate %(share)s/eventex.com.br.cert;
+    ssl_certificate_key %(share)s/eventex.com.br.key;
+
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
+    ssl_dhparam %(share)s/dhparam.pem;
+
+    root %(current)s;
+
+    location / {
+        uwsgi_pass unix:%(share)s/%(project)s.sock;
+        include uwsgi_params;
+        auth_basic "Restricted";                                #For Basic Auth
+        auth_basic_user_file /home/eventex_stage/eventex_stage/share/.htpasswd;  #For Basic Auth
+        #include /etc/nginx/bots.conf;
+    }
+}
+
+server {
+    listen 443 ssl;
+    charset utf-8;
+    server_name eventex.com.br *.eventex.com.br;
+
+    ssl_certificate %(share)s/eventex.com.br.cert;
+    ssl_certificate_key %(share)s/eventex.com.br.key;
+
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
+    ssl_dhparam %(share)s/dhparam.pem;
+
+    root %(current)s;
+
+    location /static {
+        # if asset versioning is used
+        if ($query_string) {
+            expires max;
+        }
+
+        root %(current)s/%(package)s;
+    }
+
+    location /media {
+        # if asset versioning is used
+        if ($query_string) {
+            expires max;
+        }
+
+        root %(current)s/%(package)s;
+    }
+
+    location / {
+        if (-f $document_root/maintenance.html) {
+            return 503;
+        }
+
+        uwsgi_pass unix:%(share)s/%(project)s.sock;
+        include uwsgi_params;
+        #include /etc/nginx/bots.conf;
+    }
+
+    error_page 503 @maintenance;
+    location @maintenance {
+        rewrite ^(.*)$ /maintenance.html break;
+    }
+}
