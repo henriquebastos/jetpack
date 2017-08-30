@@ -1,0 +1,17 @@
+*.pyc
+*~
+.Python
+/bin/
+/build/
+/include/
+/lib/
+/share/
+.DS_Store
+src/cache/
+*.db
+*.swp
+tmp
+/log/
+.idea
+.env
+*.ini
