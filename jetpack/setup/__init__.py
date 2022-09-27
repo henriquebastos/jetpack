@@ -21,7 +21,7 @@ def server(hostname=None, fqdn=None, email=None):
     '''
     hostname = hostname or env.PROJECT.instance
     fqdn = fqdn or env.host_string
-    email = email or 'root@' + fqdn
+    email = email or f'root@{fqdn}'
 
 
     puts(green('Setting up server: hostname=%(hostname)s fqdn=%(fqdn)s email=%(email)s' % locals()))
@@ -44,7 +44,7 @@ def server(hostname=None, fqdn=None, email=None):
     files.extend(answer)
 
     # Create superuser
-    if 'Y' == ask('Create superuser? [Y]es or [N]o ', options=('Y', 'N')):
+    if ask('Create superuser? [Y]es or [N]o ', options=('Y', 'N')) == 'Y':
         createuser.run(as_root=True)
 
     # Upload files and fixes execution mode
@@ -117,13 +117,13 @@ def send_to_share(local_file_path):
     f = Path(local_file_path)
 
     if not f.exists():
-        abort('Local file file not found: %s' % local_file_path)
+        abort(f'Local file file not found: {local_file_path}')
 
     remote_path = os.path.join(env.PROJECT.share, f.name)
 
     if exists(remote_path):
         if confirm(red('Overwrite?'), default=False):
-            run("rm {}".format(remote_path))
+            run(f"rm {remote_path}")
             put(local_file_path, env.PROJECT.share, mirror_local_mode=True)
     else:
         put(local_file_path, env.PROJECT.share, mirror_local_mode=True)
@@ -174,7 +174,7 @@ class CreateUser(Task):
             keyfile = Path(pubkey or Path('~', '.ssh', 'id_rsa.pub')).expand()
 
             if not keyfile.exists():
-                abort('Public key file does not exist: %s' % keyfile)
+                abort(f'Public key file does not exist: {keyfile}')
 
             pubkey = keyfile.read_file().strip()
 
@@ -232,7 +232,7 @@ def addkey(pub_file):
     f = Path(pub_file)
 
     if not f.exists():
-        abort('Public key file not found: %s' % keyfile)
+        abort(f'Public key file not found: {keyfile}')
 
     pub_key = f.read_file().strip()
 

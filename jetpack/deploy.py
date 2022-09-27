@@ -12,21 +12,21 @@ def push(revision):
     """
     Push the code to the right place on the server.
     """
-    rev = local('git rev-parse %s' % revision, capture=True)
-    local_archive = Path('%s.tar.bz2' % rev)
+    rev = local(f'git rev-parse {revision}', capture=True)
+    local_archive = Path(f'{rev}.tar.bz2')
     remote_archive = Path(env.PROJECT.tmp, local_archive.name)
 
-    local('git archive --format=tar %s | bzip2 -9 -c > %s' % (rev, local_archive))
+    local(f'git archive --format=tar {rev} | bzip2 -9 -c > {local_archive}')
     put(local_archive, env.PROJECT.tmp)
 
     release_dir = Path(env.PROJECT.releases, timestamp())
-    run('mkdir -p %s' % release_dir)
-    run('tar jxf %s -C %s' % (remote_archive, release_dir))
+    run(f'mkdir -p {release_dir}')
+    run(f'tar jxf {remote_archive} -C {release_dir}')
 
     # cleanup
-    local('rm %s' % local_archive)
+    local(f'rm {local_archive}')
 
-    puts(yellow('Release Directory: ' + release_dir))
+    puts(yellow(f'Release Directory: {release_dir}'))
     return release_dir
 
 
@@ -37,14 +37,14 @@ def build(release_dir):
     """
     host_files = Path('host').listdir()
     for host_file in host_files:
-        upload_template(host_file, '%s/host/' % release_dir, env.PROJECT, backup=False)
+        upload_template(host_file, f'{release_dir}/host/', env.PROJECT, backup=False)
 
     with cd(release_dir):
         release_media = Path(release_dir, env.PROJECT.package, 'media')
         release_settings = Path(release_dir, env.PROJECT.package, 'settings.ini')
 
-        run('ln -sf %s %s' % (env.PROJECT.settings, release_settings))
-        run('ln -sf %s %s' % (env.PROJECT.media, release_media))
+        run(f'ln -sf {env.PROJECT.settings} {release_settings}')
+        run(f'ln -sf {env.PROJECT.media} {release_media}')
 
         run("virtualenv .")
         run('%(release_dir)s/bin/pip install --upgrade pip' % locals())
@@ -60,7 +60,7 @@ def release(release_dir):
     """
     with cd(env.PROJECT.releases):
         run('rm -rf current')
-        run('ln -s %s current' % release_dir)
+        run(f'ln -s {release_dir} current')
 
 
 @task
@@ -133,5 +133,5 @@ def rsync_media(upload=False, delete=False):
 
 def add_slash(path):
     if not path.endswith('/'):
-        path = path + '/'
+        path = f'{path}/'
     return path

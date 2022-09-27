@@ -18,13 +18,14 @@ class Project(dict):
         appdir = '%(basedir)s/%(appname)s' % locals()
 
         self.dirs = dict(
-            appdir   = appdir,
-            releases = '%s/releases' % appdir,
-            current  = '%s/releases/current' % appdir,
-            share    = '%s/share' % appdir,
-            media    = '%s/share/media' % appdir,
-            tmp      = '%s/tmp' % appdir,
+            appdir=appdir,
+            releases=f'{appdir}/releases',
+            current=f'{appdir}/releases/current',
+            share=f'{appdir}/share',
+            media=f'{appdir}/share/media',
+            tmp=f'{appdir}/tmp',
         )
+
 
         super(Project, self).__init__(
             user=user,
@@ -32,9 +33,10 @@ class Project(dict):
             project=project,
             appname=appname,
             package=package,
-            settings='%s/share/settings.ini' % appdir,
-            checkpoint='%s/share/checkpoint' % appdir,
-            **self.dirs)
+            settings=f'{appdir}/share/settings.ini',
+            checkpoint=f'{appdir}/share/checkpoint',
+            **self.dirs,
+        )
 
     def __getattr__(self, item):
         if item in self:
@@ -68,7 +70,7 @@ class RunAsAdmin(Task):
         self.__doc__ = func.__doc__
         self.func = func
         self.user = user
-        self.mode = False if self.user == 'root' else True
+        self.mode = self.user != 'root'
 
     def run(self, *args, **kwargs):
         require('PROJECT')

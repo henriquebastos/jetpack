@@ -8,4 +8,4 @@ from jetpack.helpers import RunAsAdmin
 def logs(lines=50):
     require('PROJECT')
 
-    sudo('tail --lines=%s /var/log/%s.log' % (lines, env.PROJECT.appname))
+    sudo(f'tail --lines={lines} /var/log/{env.PROJECT.appname}.log')

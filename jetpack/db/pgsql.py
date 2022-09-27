@@ -36,7 +36,7 @@ def create(dbuser=None, dbname=None):
     sudo('chmod 600 %(share)s/.pgpass' % env.PROJECT)
 
     db_url = 'pgsql://%(dbuser)s:%(password)s@localhost/%(dbname)s' % locals()
-    puts(yellow('DATABASE_URL => ' + db_url))
+    puts(yellow(f'DATABASE_URL => {db_url}'))
     return db_url
 
 
@@ -75,7 +75,7 @@ def backup(dbname=None, dbuser=None):
     get(remote_dbfile, '.')
 
     #remove the temporary remote dump file
-    run('rm ' + remote_dbfile)
+    run(f'rm {remote_dbfile}')
 
 
 @task
@@ -94,11 +94,11 @@ def restore(local_file, dbname=None, dbuser=None):
     remote_file = Path(put(local_file, env.PROJECT.tmp)[0])
 
     if remote_file.endswith('.bz2'):
-        run('bunzip2 ' + remote_file)
+        run(f'bunzip2 {remote_file}')
         remote_file = remote_file.parent.child(remote_file.stem)
 
     with settings(warn_only=True):
         run('pg_restore --verbose --clean -U %(dbuser)s -d %(dbname)s %(remote_file)s' % locals())
 
     # cleanup
-    run('rm ' + remote_file)
+    run(f'rm {remote_file}')

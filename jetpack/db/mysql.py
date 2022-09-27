@@ -35,7 +35,7 @@ def create(dbuser=None, dbname=None):
     sudo('chgrp www-data %(share)s/.my.cnf' % env.PROJECT)
 
     db_url = 'mysql://%(dbuser)s:%(password)s@localhost/%(dbname)s' % locals()
-    puts(yellow('DATABASE_URL => ' + db_url))
+    puts(yellow(f'DATABASE_URL => {db_url}'))
     return db_url
 
 
@@ -69,7 +69,7 @@ def backup(dbname):
     get(remote_dbfile, '.')
 
     #remove the temporary remote dump file
-    sudo('rm ' + remote_dbfile)
+    sudo(f'rm {remote_dbfile}')
 
 
 @task(task_class=RunAsAdmin, user=env.local_user)
@@ -84,11 +84,11 @@ def restore(dbname, local_file):
     remote_file = Path(put(local_file, env.PROJECT.tmp, use_sudo=True)[0])
 
     if remote_file.endswith('.bz2'):
-        sudo('bunzip2 ' + remote_file)
+        sudo(f'bunzip2 {remote_file}')
         remote_file = remote_file.parent.child(remote_file.stem)
 
     sudo('mysql --defaults-extra-file=/root/.my.cnf -e "DROP DATABASE %(dbname)s; CREATE DATABASE %(dbname)s;"' % locals())
     sudo('mysql --defaults-extra-file=/root/.my.cnf %(dbname)s < %(remote_file)s' % locals())
 
     # cleanup
-    sudo('rm ' + remote_file)
+    sudo(f'rm {remote_file}')

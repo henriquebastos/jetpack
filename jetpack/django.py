@@ -10,7 +10,7 @@ def manage(command):
     with settings(hide('warnings'), warn_only=True):
         with cd(env.PROJECT.current):
             with prefix('source bin/activate'):
-                run('python manage.py %s' % command)
+                run(f'python manage.py {command}')
 
 
 @task
@@ -26,7 +26,10 @@ def dumpdata(apps_or_models=''):
 
     with cd(env.PROJECT.current):
         with prefix('source bin/activate'):
-            run('python manage.py dumpdata %s --indent 4 | bzip2 -c  > %s' % (apps_or_models, remote_file))
+            run(
+                f'python manage.py dumpdata {apps_or_models} --indent 4 | bzip2 -c  > {remote_file}'
+            )
+
             return get(remote_file, '.')
 
 
@@ -43,11 +46,11 @@ def loaddata(local_file):
     remote_file = Path(put(local_file, env.PROJECT.tmp)[0])
 
     if remote_file.endswith('.bz2'):
-        run('bunzip2 ' + remote_file)
+        run(f'bunzip2 {remote_file}')
         remote_file = remote_file.parent.child(remote_file.stem)
 
     with cd(env.PROJECT.current):
         with prefix('source bin/activate'):
-            run('python manage.py loaddata %s' % remote_file)
+            run(f'python manage.py loaddata {remote_file}')
 
-    run('rm %s' % remote_file)
+    run(f'rm {remote_file}')

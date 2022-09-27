@@ -31,7 +31,7 @@ def set(option, value=None):
 
     option = option.upper()
 
-    after = '%s = %s' % (option, value)
+    after = f'{option} = {value}'
 
     remove(option, refresh=False) # remove option if exists.
     append(env.PROJECT.settings, after)
@@ -48,14 +48,17 @@ def remove(option, refresh=True):
     option = option.lower()
 
     before = '^%s\s+?=\s+?.*' % option
-    after = ''
-
     if contains(env.PROJECT.settings, before, use_re=True):
+        after = ''
+
         sed(env.PROJECT.settings, before, after, backup='', flags='I')
         run(r"tr -s '\n' < %(settings)s > %(settings)s.new && mv %(settings)s{.new,}" % env.PROJECT)
 
     # sanity check
-    assert not contains(env.PROJECT.settings, '%s.*' % option), 'Config found: "%s"' % option
+    assert not contains(env.PROJECT.settings, f'{option}.*'), (
+        'Config found: "%s"' % option
+    )
+
 
     if refresh:
         restart()
@@ -85,8 +88,8 @@ def add_user_to_htpasswd(username):
 
     filepath = '%(share)s/.htpasswd' % env.PROJECT
 
-    run('touch %s' % filepath)
-    run('htpasswd %s %s' % (filepath, username))
+    run(f'touch {filepath}')
+    run(f'htpasswd {filepath} {username}')
 
 def contains(filename, text, use_re=False):
     '''
